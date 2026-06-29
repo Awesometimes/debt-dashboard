@@ -13,6 +13,7 @@ const defaultState = {
 const storeKey = "loan-ledger-state-v1";
 let state = { ...defaultState };
 let currentRole = "lender";
+let editingPaymentId = null;
 let storageMode = "local";
 let remoteUnsubscribe = null;
 let saveRemoteState = null;
@@ -214,7 +215,8 @@ function renderLedger() {
           <td>${payment.method}</td>
           <td>${escapeHtml(payment.note || "")}</td>
           <td class="money">${exactMoney.format(payment.amount)}</td>
-          <td class="money">
+          <td class="money" style="display: flex; gap: 4px; justify-content: flex-end;">
+            <button class="edit-row" type="button" data-id="${payment.id}" title="Edit payment">✎</button>
             <button class="delete-row" type="button" data-id="${payment.id}" title="Delete payment">X</button>
           </td>
         </tr>
@@ -800,24 +802,64 @@ function bindEvents() {
 
   $("paymentForm").addEventListener("submit", async (event) => {
     event.preventDefault();
-    state.payments.push({
-      id: crypto.randomUUID(),
-      amount: Number($("paymentAmountInput").value || 0),
-      date: $("paymentDateInput").value,
-      method: $("paymentMethodInput").value,
-      note: $("paymentNoteInput").value.trim(),
-    });
+    const amount = Number($("paymentAmountInput").value || 0);
+    const date = $("paymentDateInput").value;
+    const method = $("paymentMethodInput").value;
+    const note = $("paymentNoteInput").value.trim();
+
+    if (editingPaymentId) {
+      const idx = state.payments.findIndex(p => p.id === editingPaymentId);
+      if (idx !== -1) {
+        state.payments[idx] = { ...state.payments[idx], amount, date, method, note };
+      }
+      editingPaymentId = null;
+      $("paymentSubmitBtn").textContent = "Add payment";
+      $("paymentCancelBtn").classList.add("hidden");
+    } else {
+      state.payments.push({
+        id: crypto.randomUUID(),
+        amount,
+        date,
+        method,
+        note,
+      });
+    }
+
     $("paymentAmountInput").value = "";
     $("paymentNoteInput").value = "";
+    $("paymentDateInput").value = new Date().toISOString().slice(0, 10);
     await saveState();
     renderAll();
   });
 
+  $("paymentCancelBtn").addEventListener("click", () => {
+    editingPaymentId = null;
+    $("paymentAmountInput").value = "";
+    $("paymentNoteInput").value = "";
+    $("paymentDateInput").value = new Date().toISOString().slice(0, 10);
+    $("paymentSubmitBtn").textContent = "Add payment";
+    $("paymentCancelBtn").classList.add("hidden");
+  });
+
   $("ledgerRows").addEventListener("click", async (event) => {
-    if (!event.target.matches(".delete-row")) return;
-    state.payments = state.payments.filter((payment) => payment.id !== event.target.dataset.id);
-    await saveState();
-    renderAll();
+    if (event.target.matches(".delete-row")) {
+      state.payments = state.payments.filter((payment) => payment.id !== event.target.dataset.id);
+      await saveState();
+      renderAll();
+    } else if (event.target.matches(".edit-row")) {
+      const payment = state.payments.find(p => p.id === event.target.dataset.id);
+      if (payment) {
+        editingPaymentId = payment.id;
+        $("paymentAmountInput").value = payment.amount;
+        $("paymentDateInput").value = payment.date;
+        $("paymentMethodInput").value = payment.method;
+        $("paymentNoteInput").value = payment.note || "";
+        
+        $("paymentSubmitBtn").textContent = "Update payment";
+        $("paymentCancelBtn").classList.remove("hidden");
+        $("paymentForm").scrollIntoView({ behavior: "smooth" });
+      }
+    }
   });
 
   ["friendAprInput", "marketReturnInput"].forEach((id) => {

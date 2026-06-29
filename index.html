@@ -141,7 +141,10 @@
                 Note
                 <input id="paymentNoteInput" type="text" maxlength="80" placeholder="Optional" />
               </label>
-              <button type="submit">Add payment</button>
+              <div style="display: flex; gap: 8px;">
+                <button type="submit" id="paymentSubmitBtn">Add payment</button>
+                <button type="button" id="paymentCancelBtn" class="cancel-button hidden">Cancel</button>
+              </div>
             </form>
 
             <div class="ledger-table-wrap">
