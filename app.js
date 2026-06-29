@@ -960,9 +960,11 @@ function bindEvents() {
 
   $("ledgerRows").addEventListener("click", async (event) => {
     if (event.target.matches(".delete-row")) {
-      state.payments = state.payments.filter((payment) => payment.id !== event.target.dataset.id);
-      await saveState();
-      renderAll();
+      if (confirm("Are you sure you want to delete this payment? This action cannot be undone.")) {
+        state.payments = state.payments.filter((payment) => payment.id !== event.target.dataset.id);
+        await saveState();
+        renderAll();
+      }
     } else if (event.target.matches(".edit-row")) {
       const payment = state.payments.find(p => p.id === event.target.dataset.id);
       if (payment) {
