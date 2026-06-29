@@ -172,6 +172,7 @@ function renderAll() {
   renderSummary();
   renderLedger();
   renderScenarios();
+  renderStats();
   renderPayoff();
   drawCostChart();
   drawPaymentChart();
@@ -246,6 +247,38 @@ function renderScenarios() {
       `;
     })
     .join("");
+}
+
+function renderStats() {
+  const payments = [...state.payments].sort((a, b) => new Date(a.date) - new Date(b.date));
+  
+  if (payments.length === 0) {
+    if ($("avgFrequencyStat")) $("avgFrequencyStat").textContent = "--";
+    if ($("avgSizeStat")) $("avgSizeStat").textContent = "--";
+    if ($("totalPaymentsStat")) $("totalPaymentsStat").textContent = "0";
+    return;
+  }
+
+  const total = payments.reduce((sum, p) => sum + p.amount, 0);
+  const avgSize = total / payments.length;
+
+  let avgFreqDays = 0;
+  if (payments.length > 1) {
+    const firstDate = new Date(payments[0].date);
+    const lastDate = new Date(payments[payments.length - 1].date);
+    const diffTime = Math.abs(lastDate - firstDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    avgFreqDays = Math.ceil(diffDays / (payments.length - 1));
+  } else {
+    const loanDate = new Date(state.loanDate);
+    const payDate = new Date(payments[0].date);
+    const diffTime = Math.abs(payDate - loanDate);
+    avgFreqDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+
+  if ($("avgFrequencyStat")) $("avgFrequencyStat").textContent = `1 every ${avgFreqDays} days`;
+  if ($("avgSizeStat")) $("avgSizeStat").textContent = money.format(avgSize);
+  if ($("totalPaymentsStat")) $("totalPaymentsStat").textContent = `${payments.length}`;
 }
 
 function renderPayoff() {
