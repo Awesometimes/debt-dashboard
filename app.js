@@ -496,6 +496,7 @@ function drawPaymentChart() {
             minRotation: 45,
             autoSkip: true,
             autoSkipPadding: 16,
+            maxTicksLimit: window.innerWidth < 600 ? 4 : 10,
             callback: function(value) {
               if (value === startDate.getTime()) {
                 return "Initial Loan";
