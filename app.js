@@ -720,7 +720,13 @@ function drawProjectionChart() {
     let safetyCounter = 0;
     while (loopBalance > 0 && safetyCounter < 1000) {
       loopBalance = Math.max(0, loopBalance - plannedAmount);
-      plannedProjectionData.push({ x: loopDate.getTime(), y: loopBalance });
+      
+      const loopAge = (loopDate - loanDateObj) / (1000 * 60 * 60 * 24 * 365.25);
+      const theoreticalCompounded = compound(principal, state.friendApr, Math.max(0, loopAge));
+      const totalPaidAtLoop = totalPaidAmount + ((safetyCounter + 1) * plannedAmount);
+      const forgoneInterest = Math.max(0, theoreticalCompounded - loopBalance - totalPaidAtLoop);
+      
+      plannedProjectionData.push({ x: loopDate.getTime(), y: loopBalance, forgoneInterest });
       
       if (loopBalance <= 0) break;
 
@@ -801,10 +807,14 @@ function drawProjectionChart() {
                   `this is your projected timeline.`
                 ];
               } else if (label === 'Planned Projection') {
-                return [
+                const arr = [
                   `Projected Balance: ${val}`,
                   `Based on your planned payment schedule.`
                 ];
+                if (context.raw.forgoneInterest !== undefined) {
+                  arr.push(`Projected Forgone Interest: ${exactMoney.format(context.raw.forgoneInterest)}`);
+                }
+                return arr;
               }
               return `${label}: ${val}`;
             }
