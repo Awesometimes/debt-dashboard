@@ -178,6 +178,39 @@ function renderAll() {
   drawCostChart();
   drawPaymentChart();
   drawProjectionChart();
+  renderShameBanner();
+}
+
+function renderShameBanner() {
+  const banner = $("shameBanner");
+  if (!banner) return;
+  
+  if (currentRole !== "borrower") {
+    banner.classList.add("hidden");
+    return;
+  }
+  
+  if (state.payments.length === 0) {
+    banner.classList.add("hidden");
+    return;
+  }
+  
+  const sorted = [...state.payments].sort((a, b) => b.date.localeCompare(a.date));
+  const lastPaymentDate = new Date(sorted[0].date);
+  // Add timezone offset to fix the date boundary issue when parsing from YYYY-MM-DD
+  const userTimezoneOffset = lastPaymentDate.getTimezoneOffset() * 60000;
+  const lastPayment = new Date(lastPaymentDate.getTime() + userTimezoneOffset);
+  const today = new Date();
+  
+  const diffTime = Math.abs(today - lastPayment);
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays > 30) {
+    $("shameDays").textContent = diffDays;
+    banner.classList.remove("hidden");
+  } else {
+    banner.classList.add("hidden");
+  }
 }
 
 function renderSummary() {

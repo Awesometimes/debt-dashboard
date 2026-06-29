@@ -234,6 +234,25 @@ small {
   background: #eee7dc;
 }
 
+.shame-banner {
+  background-color: #fcedec;
+  border: 1px solid #f2c0c0;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  color: #7d2a2a;
+}
+.shame-banner strong {
+  display: block;
+  font-size: 1.1rem;
+  margin-bottom: 4px;
+}
+.shame-banner p {
+  font-size: 0.95rem;
+  margin: 0;
+  opacity: 0.9;
+}
+
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
