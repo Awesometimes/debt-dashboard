@@ -145,10 +145,7 @@
                 Note
                 <input id="paymentNoteInput" type="text" maxlength="80" placeholder="Optional" />
               </label>
-              <div style="display: flex; gap: 8px;">
-                <button type="submit" id="paymentSubmitBtn">Add payment</button>
-                <button type="button" id="paymentCancelBtn" class="cancel-button hidden">Cancel</button>
-              </div>
+              <button type="submit">Add payment</button>
             </form>
 
             <div class="ledger-table-wrap">
@@ -346,6 +343,42 @@
         </section>
       </section>
     </main>
+
+    <div id="editPaymentModal" class="modal-overlay hidden">
+      <div class="modal-content">
+        <h3>Edit payment</h3>
+        <form id="editPaymentForm" class="tool-panel" style="border: none; background: transparent; padding: 0;">
+          <label>
+            Amount
+            <input id="editPaymentAmountInput" type="number" min="0" step="25" required />
+          </label>
+          <label>
+            Date
+            <input id="editPaymentDateInput" type="date" required />
+          </label>
+          <label>
+            Method
+            <select id="editPaymentMethodInput">
+              <option>Zelle</option>
+              <option>Cash App</option>
+              <option>Venmo</option>
+              <option>Check</option>
+              <option>Cash</option>
+              <option>Bank transfer</option>
+            </select>
+          </label>
+          <label>
+            Note
+            <input id="editPaymentNoteInput" type="text" maxlength="80" placeholder="Optional" />
+          </label>
+          <div style="display: flex; gap: 8px;">
+            <button type="submit">Save changes</button>
+            <button type="button" id="editPaymentCancelBtn" class="cancel-button">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="firebase-config.js"></script>
     <script src="app.js"></script>

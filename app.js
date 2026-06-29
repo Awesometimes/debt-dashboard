@@ -835,29 +835,13 @@ function bindEvents() {
 
   $("paymentForm").addEventListener("submit", async (event) => {
     event.preventDefault();
-    const amount = Number($("paymentAmountInput").value || 0);
-    const date = $("paymentDateInput").value;
-    const method = $("paymentMethodInput").value;
-    const note = $("paymentNoteInput").value.trim();
-
-    if (editingPaymentId) {
-      const idx = state.payments.findIndex(p => p.id === editingPaymentId);
-      if (idx !== -1) {
-        state.payments[idx] = { ...state.payments[idx], amount, date, method, note };
-      }
-      editingPaymentId = null;
-      $("paymentSubmitBtn").textContent = "Add payment";
-      $("paymentCancelBtn").classList.add("hidden");
-    } else {
-      state.payments.push({
-        id: crypto.randomUUID(),
-        amount,
-        date,
-        method,
-        note,
-      });
-    }
-
+    state.payments.push({
+      id: crypto.randomUUID(),
+      amount: Number($("paymentAmountInput").value || 0),
+      date: $("paymentDateInput").value,
+      method: $("paymentMethodInput").value,
+      note: $("paymentNoteInput").value.trim(),
+    });
     $("paymentAmountInput").value = "";
     $("paymentNoteInput").value = "";
     $("paymentDateInput").value = new Date().toISOString().slice(0, 10);
@@ -865,13 +849,29 @@ function bindEvents() {
     renderAll();
   });
 
-  $("paymentCancelBtn").addEventListener("click", () => {
+  $("editPaymentForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (editingPaymentId) {
+      const idx = state.payments.findIndex(p => p.id === editingPaymentId);
+      if (idx !== -1) {
+        state.payments[idx] = {
+          ...state.payments[idx],
+          amount: Number($("editPaymentAmountInput").value || 0),
+          date: $("editPaymentDateInput").value,
+          method: $("editPaymentMethodInput").value,
+          note: $("editPaymentNoteInput").value.trim()
+        };
+      }
+      editingPaymentId = null;
+      $("editPaymentModal").classList.add("hidden");
+      await saveState();
+      renderAll();
+    }
+  });
+
+  $("editPaymentCancelBtn").addEventListener("click", () => {
     editingPaymentId = null;
-    $("paymentAmountInput").value = "";
-    $("paymentNoteInput").value = "";
-    $("paymentDateInput").value = new Date().toISOString().slice(0, 10);
-    $("paymentSubmitBtn").textContent = "Add payment";
-    $("paymentCancelBtn").classList.add("hidden");
+    $("editPaymentModal").classList.add("hidden");
   });
 
   $("ledgerRows").addEventListener("click", async (event) => {
@@ -883,14 +883,12 @@ function bindEvents() {
       const payment = state.payments.find(p => p.id === event.target.dataset.id);
       if (payment) {
         editingPaymentId = payment.id;
-        $("paymentAmountInput").value = payment.amount;
-        $("paymentDateInput").value = payment.date;
-        $("paymentMethodInput").value = payment.method;
-        $("paymentNoteInput").value = payment.note || "";
+        $("editPaymentAmountInput").value = payment.amount;
+        $("editPaymentDateInput").value = payment.date;
+        $("editPaymentMethodInput").value = payment.method;
+        $("editPaymentNoteInput").value = payment.note || "";
         
-        $("paymentSubmitBtn").textContent = "Update payment";
-        $("paymentCancelBtn").classList.remove("hidden");
-        $("paymentForm").scrollIntoView({ behavior: "smooth" });
+        $("editPaymentModal").classList.remove("hidden");
       }
     }
   });
