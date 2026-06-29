@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Loan Ledger</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="login-view" id="loginView" aria-labelledby="loginTitle">
+        <div class="login-visual" aria-hidden="true">
+          <canvas id="heroChart" width="720" height="420"></canvas>
+        </div>
+        <div class="login-panel">
+          <p class="eyebrow">Private repayment tracker</p>
+          <h1 id="loginTitle">Loan Ledger</h1>
+          <p class="intro">
+            A calm place to see what was borrowed, what has been paid, what is
+            still owed, and what the long wait has cost.
+          </p>
+          <form id="loginForm" class="login-form">
+            <label>
+              Role
+              <select id="roleSelect">
+                <option value="lender">Lender</option>
+                <option value="borrower">Borrower</option>
+              </select>
+            </label>
+            <label>
+              Access PIN
+              <input id="pinInput" type="password" inputmode="numeric" value="20000" />
+            </label>
+            <button type="submit">Enter dashboard</button>
+          </form>
+          <p class="fine-print" id="storageNote">Prototype PIN: 20000. Data is saved locally until Firebase is configured.</p>
+        </div>
+      </section>
+
+      <section class="app-view hidden" id="appView">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Friend loan</p>
+            <h1>Repayment Dashboard</h1>
+          </div>
+          <div class="topbar-actions">
+            <span id="roleBadge" class="role-badge">Lender view</span>
+            <span id="storageBadge" class="storage-badge">Local preview</span>
+            <button id="exportButton" class="icon-button" type="button" title="Export ledger">Export</button>
+            <button id="resetButton" class="ghost-button" type="button">Reset</button>
+            <button id="logoutButton" class="ghost-button" type="button">Log out</button>
+          </div>
+        </header>
+
+        <section class="summary-grid" aria-label="Loan summary">
+          <article class="metric-card strong">
+            <span>Still owed</span>
+            <strong id="owedMetric">$20,000</strong>
+            <small id="owedNote">Based on recorded payments</small>
+          </article>
+          <article class="metric-card">
+            <span>Paid back</span>
+            <strong id="paidMetric">$0</strong>
+            <small id="paymentCount">0 recorded payments</small>
+          </article>
+          <article class="metric-card">
+            <span>Time outstanding</span>
+            <strong id="ageMetric">12.0 yrs</strong>
+            <small id="startDateNote">Since Jan 9, 2018</small>
+          </article>
+          <article class="metric-card">
+            <span>Friend discount</span>
+            <strong id="discountMetric">$0</strong>
+            <small>No interest actually charged</small>
+          </article>
+        </section>
+
+        <nav class="tabs" aria-label="Dashboard sections">
+          <button class="tab active" data-tab="ledger" type="button">Ledger</button>
+          <button class="tab" data-tab="costs" type="button">Cost</button>
+          <button class="tab" data-tab="payoff" type="button">Payoff</button>
+          <button class="tab" data-tab="next" type="button">Next moves</button>
+        </nav>
+
+        <section class="panel active" id="ledgerPanel">
+          <div class="section-heading">
+            <div>
+              <h2>Payments</h2>
+              <p>Record payments as they happen and keep both sides looking at the same math.</p>
+            </div>
+          </div>
+          <article class="chart-panel" style="margin-bottom: 14px;">
+            <h3>Payment Timeline</h3>
+            <div style="position: relative; height: 280px; width: 100%;">
+              <canvas id="paymentChart"></canvas>
+            </div>
+          </article>
+          <div class="ledger-layout">
+            <form id="settingsForm" class="tool-panel">
+              <h3>Loan settings</h3>
+              <label>
+                Original loan
+                <input id="principalInput" type="number" min="0" step="100" />
+              </label>
+              <label>
+                Loan date
+                <input id="loanDateInput" type="date" />
+              </label>
+              <label>
+                Written note status
+                <select id="noteStatusInput">
+                  <option>Needs written repayment plan</option>
+                  <option>Has written repayment plan</option>
+                  <option>Has signed promissory note</option>
+                </select>
+              </label>
+              <button type="submit">Save settings</button>
+            </form>
+
+            <form id="paymentForm" class="tool-panel">
+              <h3>Add payment</h3>
+              <label>
+                Amount
+                <input id="paymentAmountInput" type="number" min="0" step="25" required />
+              </label>
+              <label>
+                Date
+                <input id="paymentDateInput" type="date" required />
+              </label>
+              <label>
+                Method
+                <select id="paymentMethodInput">
+                  <option>Zelle</option>
+                  <option>Cash App</option>
+                  <option>Venmo</option>
+                  <option>Check</option>
+                  <option>Cash</option>
+                  <option>Bank transfer</option>
+                </select>
+              </label>
+              <label>
+                Note
+                <input id="paymentNoteInput" type="text" maxlength="80" placeholder="Optional" />
+              </label>
+              <button type="submit">Add payment</button>
+            </form>
+
+            <div class="ledger-table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Method</th>
+                    <th>Note</th>
+                    <th class="money">Amount</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="ledgerRows"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="costsPanel">
+          <div class="section-heading">
+            <div>
+              <h2>What the free loan cost</h2>
+              <p>Editable assumptions show what interest or investing could have looked like.</p>
+            </div>
+            <div class="rate-controls">
+              <label>
+                Friend APR
+                <input id="friendAprInput" type="number" min="0" max="40" step="0.25" />
+              </label>
+              <label>
+                Market return
+                <input id="marketReturnInput" type="number" min="0" max="40" step="0.25" />
+              </label>
+            </div>
+          </div>
+
+          <div class="chart-grid">
+            <article class="chart-panel">
+              <h3>Hypothetical balance by path</h3>
+              <canvas id="costChart" width="980" height="420"></canvas>
+            </article>
+            <article class="table-card">
+              <h3>Scenario grid</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Scenario</th>
+                    <th class="money">Total today</th>
+                    <th class="money">Difference</th>
+                  </tr>
+                </thead>
+                <tbody id="scenarioRows"></tbody>
+              </table>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel" id="payoffPanel">
+          <div class="section-heading">
+            <div>
+              <h2>Payoff options</h2>
+              <p>Turn a vague debt into a concrete promise with dates and amounts.</p>
+            </div>
+          </div>
+          <div class="payoff-grid">
+            <form id="payoffForm" class="tool-panel">
+              <h3>Build a plan</h3>
+              <label>
+                Payment amount
+                <input id="paymentAmountInput" type="number" min="1" step="1" />
+              </label>
+              <label>
+                Frequency
+                <select id="paymentFrequencyInput">
+                  <option value="weekly">Weekly</option>
+                  <option value="biweekly">Bi-weekly</option>
+                  <option value="monthly" selected>Monthly</option>
+                  <option value="every_other_month">Every other month</option>
+                  <option value="quarterly">Quarterly</option>
+                  <option value="bi_yearly">Bi-yearly</option>
+                  <option value="yearly">Yearly</option>
+                </select>
+              </label>
+              <label>
+                First due date
+                <input id="firstDueInput" type="date" />
+              </label>
+              <button type="submit">Update plan</button>
+            </form>
+            <article class="payoff-card">
+              <span id="periodsLabel">Months to zero</span>
+              <strong id="monthsToZero">--</strong>
+              <small id="finalPaymentNote">Choose a payment amount</small>
+            </article>
+            <article class="payoff-card">
+              <span>Recommended agreement</span>
+              <strong id="agreementAmount">$500/mo</strong>
+              <small id="agreementSubtext">Autopay, due on the same day every month</small>
+            </article>
+          </div>
+          <article class="chart-panel" style="margin-top: 14px; margin-bottom: 14px;">
+            <h3>Balance Projection</h3>
+            <div style="position: relative; height: 280px; width: 100%;">
+              <canvas id="projectionChart"></canvas>
+            </div>
+          </article>
+          <div class="ways-grid">
+            <article>
+              <h3>Borrower paths</h3>
+              <ul>
+                <li>Set automatic monthly payments with a fixed due date.</li>
+                <li>Make a partial lump-sum payment from savings, tax refund, or bonus.</li>
+                <li>Ask family for short-term help and pay them back on a clear schedule.</li>
+                <li>Compare bank or credit-union personal loan rates before borrowing.</li>
+                <li>Sell unused items or take temporary extra work until the balance is smaller.</li>
+              </ul>
+            </article>
+            <article>
+              <h3>Lender paths</h3>
+              <ul>
+                <li>Ask for a signed repayment agreement with payment amount, due date, and default terms.</li>
+                <li>Move every payment through traceable methods and keep receipts.</li>
+                <li>Send a calm written demand that gives a specific deadline.</li>
+                <li>Offer one negotiated discount only if it brings immediate money in.</li>
+                <li>Consider mediation, small claims, or a lawyer if the agreement keeps slipping.</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel" id="nextPanel">
+          <div class="section-heading">
+            <div>
+              <h2>Next moves</h2>
+              <p>Preserve the friendship if possible, but stop letting the debt stay shapeless.</p>
+            </div>
+          </div>
+          <div class="steps">
+            <article>
+              <span>1</span>
+              <h3>Put the exact balance in writing</h3>
+              <p>Send the current ledger, ask him to confirm it, and save that acknowledgement.</p>
+            </article>
+            <article>
+              <span>2</span>
+              <h3>Ask for a signed plan</h3>
+              <p>Use a plain repayment agreement with monthly amount, first due date, and catch-up rules.</p>
+            </article>
+            <article>
+              <span>3</span>
+              <h3>Use a deadline, not pressure</h3>
+              <p>Give a date for the first payment and a date when you will choose the next remedy.</p>
+            </article>
+            <article>
+              <span>4</span>
+              <h3>Check state rules</h3>
+              <p>Old personal loans can run into statute-of-limitations issues, especially without a signed note.</p>
+            </article>
+          </div>
+          <div class="jurisdiction-panel">
+            <div>
+              <p class="eyebrow">Massachusetts to Peru</p>
+              <h3>Cross-border reality check</h3>
+              <p>
+                A borrower in Lima makes this less about proving the debt and more about
+                jurisdiction, valid service, and whether a judgment can actually be collected.
+              </p>
+            </div>
+            <ul>
+              <li>Massachusetts small claims is generally capped at $7,000, so $20,000 may require a regular civil case or waiving part of the claim.</li>
+              <li>Massachusetts contract claims are generally time-limited; ask a lawyer whether recent payments or written acknowledgments change the clock.</li>
+              <li>Serving court papers in Peru can require international service rules, translations, and a local lawyer or formal request process.</li>
+              <li>A Massachusetts judgment may be most useful if he has U.S. assets, U.S. income, or bank accounts you can legally reach.</li>
+              <li>If collection would need to happen in Peru, get advice from counsel familiar with Peruvian enforcement before spending money filing.</li>
+            </ul>
+          </div>
+          <div class="notice">
+            This app is not legal or financial advice. For a debt this old, check your state statute of limitations before threatening suit or accepting a token payment.
+          </div>
+        </section>
+      </section>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
