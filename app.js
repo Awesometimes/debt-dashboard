@@ -501,10 +501,10 @@ function drawPaymentChart() {
             maxTicksLimit: window.innerWidth < 600 ? 4 : 10,
             callback: function(value) {
               if (value === startDate.getTime()) {
-                return "Initial Loan";
+                return ["Initial", shortDate.format(new Date(value))];
               }
               if (value === endDate.getTime()) {
-                return "Today";
+                return ["Today", shortDate.format(new Date(value))];
               }
               return shortDate.format(new Date(value));
             }
