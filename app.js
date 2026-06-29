@@ -563,6 +563,7 @@ function drawPaymentChart() {
         data: dataPoints,
         backgroundColor: '#276c54',
         borderRadius: 4,
+        barThickness: 6,
         maxBarThickness: 16
       }]
     },
