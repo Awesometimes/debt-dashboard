@@ -492,10 +492,10 @@ function drawPaymentChart() {
           ticks: { 
             font: { family: 'Inter, sans-serif', size: 11 }, 
             color: '#66706d',
-            maxRotation: 90,
-            minRotation: 90,
+            maxRotation: 45,
+            minRotation: 45,
             autoSkip: true,
-            autoSkipPadding: 8,
+            autoSkipPadding: 16,
             callback: function(value) {
               if (value === startDate.getTime()) {
                 return "Initial Loan";

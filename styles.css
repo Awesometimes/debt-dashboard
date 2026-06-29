@@ -565,8 +565,15 @@ ul {
   .summary-grid,
   .steps,
   .ways-grid,
+  .stats-grid,
+  .payoff-grid,
   .rate-controls {
     grid-template-columns: 1fr;
+  }
+
+  .tabs {
+    flex-wrap: wrap;
+    justify-content: flex-start;
   }
 
   th,
