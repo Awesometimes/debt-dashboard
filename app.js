@@ -745,12 +745,6 @@ function bindEvents() {
     drawHeroChart();
   });
 
-  $("resetButton").addEventListener("click", () => {
-    state = { ...defaultState, payments: [] };
-    localStorage.removeItem(storeKey);
-    renderAll();
-  });
-
   document.querySelectorAll(".tab").forEach((tab) => {
     tab.addEventListener("click", () => {
       document.querySelectorAll(".tab").forEach((item) => item.classList.remove("active"));
