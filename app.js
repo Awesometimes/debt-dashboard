@@ -8,6 +8,7 @@ const defaultState = {
   paymentFrequency: "monthly",
   firstDue: new Date().toISOString().slice(0, 10),
   payments: [],
+  venmoUsername: "",
 };
 
 const storeKey = "loan-ledger-state-v1";
@@ -57,6 +58,7 @@ function normalizeState(nextState) {
     paymentAmount: Number(nextState.paymentAmount ?? defaultState.paymentAmount),
     paymentFrequency: nextState.paymentFrequency || defaultState.paymentFrequency,
     payments: Array.isArray(nextState.payments) ? nextState.payments : [],
+    venmoUsername: nextState.venmoUsername || defaultState.venmoUsername,
   };
 }
 
@@ -170,6 +172,17 @@ function renderAll() {
   $("paymentFrequencyInput").value = state.paymentFrequency;
   $("firstDueInput").value = state.firstDue;
 
+  $("venmoUsernameInput").value = state.venmoUsername || "";
+  
+  const nudgesTab = $("nudgesTab");
+  if (nudgesTab) {
+    if (currentRole === "borrower") {
+      nudgesTab.classList.add("hidden");
+    } else {
+      nudgesTab.classList.remove("hidden");
+    }
+  }
+
   renderSummary();
   renderLedger();
   renderScenarios();
@@ -179,6 +192,7 @@ function renderAll() {
   drawPaymentChart();
   drawProjectionChart();
   renderShameBanner();
+  renderNudges();
 }
 
 function renderShameBanner() {
@@ -211,6 +225,74 @@ function renderShameBanner() {
   } else {
     banner.classList.add("hidden");
   }
+}
+
+function renderNudges() {
+  const list = $("nudgeList");
+  if (!list) return;
+  list.innerHTML = "";
+
+  if (currentRole === "borrower") return;
+
+  const total = Number(state.principal) - totalPaid();
+  if (total <= 0) {
+    list.innerHTML = "<p>Loan is fully paid off. No nudges needed!</p>";
+    return;
+  }
+
+  const sorted = [...state.payments].sort((a, b) => b.date.localeCompare(a.date));
+  let daysSinceStr = "a while";
+  if (sorted.length > 0) {
+    const lastPaymentDate = new Date(sorted[0].date);
+    const userTimezoneOffset = lastPaymentDate.getTimezoneOffset() * 60000;
+    const lastPayment = new Date(lastPaymentDate.getTime() + userTimezoneOffset);
+    const today = new Date();
+    const diffTime = Math.abs(today - lastPayment);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    daysSinceStr = `${diffDays} days`;
+  }
+
+  const amountStr = money.format(total);
+  const monthlyStr = money.format(state.paymentAmount);
+  const venmo = state.venmoUsername;
+  const paymentAmount = state.paymentAmount || Math.min(total, 50);
+
+  const nudges = [
+    {
+      title: "Gentle Check-in",
+      text: `Hey! Just doing a quick check-in on the dashboard. No rush, but wanted to see if you were planning to make a payment soon.`,
+    },
+    {
+      title: "Firm Reminder",
+      text: `Hey, I noticed it's been ${daysSinceStr} since the last payment. Can we get the balance down from ${amountStr} this week?`,
+    },
+    {
+      title: "Payment Plan",
+      text: `Hey! Just a reminder for our agreed ${monthlyStr}/mo plan. You can send it when you get a chance.`,
+    }
+  ];
+
+  nudges.forEach(nudge => {
+    const encodedText = encodeURIComponent(nudge.text);
+    const smsLink = `sms:?body=${encodedText}`;
+    
+    let venmoBtnHtml = "";
+    if (venmo) {
+      const venmoLink = `venmo://paycharge?txn=charge&recipients=${encodeURIComponent(venmo)}&amount=${paymentAmount}&note=${encodeURIComponent("Loan Payment")}`;
+      venmoBtnHtml = `<a href="${venmoLink}" class="ghost-button">Venmo Request</a>`;
+    }
+
+    list.innerHTML += `
+      <div class="nudge-card">
+        <p><strong>${nudge.title}</strong><br/>${nudge.text}</p>
+        <div class="nudge-actions">
+          <button type="button" onclick="navigator.clipboard.writeText('${nudge.text.replace(/'/g, "\\'")}')">Copy Text</button>
+          <a href="${smsLink}" class="ghost-button">Send SMS</a>
+          ${venmoBtnHtml}
+        </div>
+      </div>
+    `;
+  });
 }
 
 function renderSummary() {
@@ -829,6 +911,7 @@ function bindEvents() {
     state.principal = Number($("principalInput").value || 0);
     state.loanDate = $("loanDateInput").value;
     state.noteStatus = $("noteStatusInput").value;
+    state.venmoUsername = $("venmoUsernameInput").value.trim();
     await saveState();
     renderAll();
   });

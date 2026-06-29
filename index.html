@@ -82,6 +82,7 @@
           <button class="tab active" data-tab="ledger" type="button">Ledger</button>
           <button class="tab" data-tab="costs" type="button">Cost</button>
           <button class="tab" data-tab="payoff" type="button">Payoff</button>
+          <button class="tab" data-tab="nudges" type="button" id="nudgesTab">Nudges</button>
           <button class="tab" data-tab="next" type="button">Next moves</button>
         </nav>
 
@@ -116,6 +117,10 @@
                   <option>Has written repayment plan</option>
                   <option>Has signed promissory note</option>
                 </select>
+              </label>
+              <label>
+                Venmo username
+                <input id="venmoUsernameInput" type="text" placeholder="e.g. john-doe" />
               </label>
               <button type="submit">Save settings</button>
             </form>
@@ -288,6 +293,18 @@
                 <li>Consider mediation, small claims, or a lawyer if the agreement keeps slipping.</li>
               </ul>
             </article>
+          </div>
+        </section>
+
+        <section class="panel" id="nudgesPanel">
+          <div class="section-heading">
+            <div>
+              <h2>Auto-Nudges</h2>
+              <p>1-click reminders to send to the borrower. Choose the tone that fits best.</p>
+            </div>
+          </div>
+          <div class="nudge-list" id="nudgeList">
+            <!-- Nudge templates injected here -->
           </div>
         </section>
 
