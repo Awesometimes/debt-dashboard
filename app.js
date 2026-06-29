@@ -695,7 +695,13 @@ function drawProjectionChart() {
     const monthsToZeroHistorical = currentBalance / averageMonthlyPayment;
     const historicalZeroDate = new Date();
     historicalZeroDate.setMonth(historicalZeroDate.getMonth() + monthsToZeroHistorical);
-    historicalProjectionData.push({ x: historicalZeroDate.getTime(), y: 0 });
+    
+    const historicalLoopAge = (historicalZeroDate - loanDateObj) / (1000 * 60 * 60 * 24 * 365.25);
+    const historicalCompounded = compound(principal, state.friendApr, Math.max(0, historicalLoopAge));
+    const historicalTotalPaid = totalPaidAmount + currentBalance;
+    const historicalForgone = Math.max(0, historicalCompounded - 0 - historicalTotalPaid);
+    
+    historicalProjectionData.push({ x: historicalZeroDate.getTime(), y: 0, forgoneInterest: historicalForgone });
   }
 
   // 2. Planned Projection
@@ -720,13 +726,7 @@ function drawProjectionChart() {
     let safetyCounter = 0;
     while (loopBalance > 0 && safetyCounter < 1000) {
       loopBalance = Math.max(0, loopBalance - plannedAmount);
-      
-      const loopAge = (loopDate - loanDateObj) / (1000 * 60 * 60 * 24 * 365.25);
-      const theoreticalCompounded = compound(principal, state.friendApr, Math.max(0, loopAge));
-      const totalPaidAtLoop = totalPaidAmount + ((safetyCounter + 1) * plannedAmount);
-      const forgoneInterest = Math.max(0, theoreticalCompounded - loopBalance - totalPaidAtLoop);
-      
-      plannedProjectionData.push({ x: loopDate.getTime(), y: loopBalance, forgoneInterest });
+      plannedProjectionData.push({ x: loopDate.getTime(), y: loopBalance });
       
       if (loopBalance <= 0) break;
 
@@ -801,20 +801,20 @@ function drawProjectionChart() {
               const val = exactMoney.format(context.raw.y);
               const label = context.dataset.label;
               if (label === 'Historical Trend Projection') {
-                return [
+                const arr = [
                   `Projected Balance: ${val}`,
                   `Based on your historical payment frequency,`,
                   `this is your projected timeline.`
-                ];
-              } else if (label === 'Planned Projection') {
-                const arr = [
-                  `Projected Balance: ${val}`,
-                  `Based on your planned payment schedule.`
                 ];
                 if (context.raw.forgoneInterest !== undefined) {
                   arr.push(`Projected Forgone Interest: ${exactMoney.format(context.raw.forgoneInterest)}`);
                 }
                 return arr;
+              } else if (label === 'Planned Projection') {
+                return [
+                  `Projected Balance: ${val}`,
+                  `Based on your planned payment schedule.`
+                ];
               }
               return `${label}: ${val}`;
             }
