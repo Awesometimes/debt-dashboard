@@ -165,7 +165,7 @@ function renderAll() {
   $("noteStatusInput").value = state.noteStatus;
   $("friendAprInput").value = state.friendApr;
   $("marketReturnInput").value = state.marketReturn;
-  $("paymentAmountInput").value = state.paymentAmount;
+  $("planAmountInput").value = state.paymentAmount;
   $("paymentFrequencyInput").value = state.paymentFrequency;
   $("firstDueInput").value = state.firstDue;
 
@@ -831,7 +831,7 @@ function bindEvents() {
 
   $("payoffForm").addEventListener("submit", async (event) => {
     event.preventDefault();
-    state.paymentAmount = Number($("paymentAmountInput").value || 0);
+    state.paymentAmount = Number($("planAmountInput").value || 0);
     state.paymentFrequency = $("paymentFrequencyInput").value || "monthly";
     state.firstDue = $("firstDueInput").value;
     await saveState();
